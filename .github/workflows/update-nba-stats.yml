@@ -1,0 +1,31 @@
+name: Update NBA Stats
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Runs daily at 8am UTC
+  workflow_dispatch:      # Allows manual triggers
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Update stats
+        run: python utils/data_refresh.py
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/raw/2024-25_NBA.csv
+          git add data/processed/24-25_NBA_processed.csv
+          git add data/processed/NBA_Player_Props.csv
+          git commit -m "Daily NBA stats update [skip ci]" || exit 0
+          git push

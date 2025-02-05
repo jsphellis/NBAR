@@ -1,0 +1,9 @@
+beautifulsoup4
+pandas
+numpy
+matplotlib
+scikit-learn
+joblib
+tabulate
+requests
+unidecode
