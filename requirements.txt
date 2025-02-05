@@ -7,3 +7,4 @@ joblib
 tabulate
 requests
 unidecode
+python-dotenv

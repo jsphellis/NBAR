@@ -7,8 +7,17 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from unidecode import unidecode
+import os
+from dotenv import load_dotenv
+from constants import DATA_PATHS
+
+load_dotenv()
 
 BASE_URL = "https://www.basketball-reference.com/leagues/"
+
+api_key = os.getenv('API_KEY')
+sportsbook = os.getenv('SPORTSBOOK')
+league = os.getenv('LEAGUE')
 
 def get_box_score_links(year : int, month : str, headers : dict):
     """
@@ -148,37 +157,92 @@ def process_player_props(data : str):
             })
     return records
 
+def get_latest_game_date(processed_file_path: str) -> tuple[int, str]:
+    """
+    Reads the processed NBA data file and returns the most recent game date.
+    
+    Parameters:
+        processed_file_path (str): Path to the processed NBA data CSV
+    
+    Returns:
+        tuple: (year, month) of the most recent game
+    """
+    try:
+        df = pd.read_csv(processed_file_path)
+        df['date'] = pd.to_datetime(df[['Year', 'Month', 'Day']])
+        latest_date = df['date'].max()
+        return latest_date.year, latest_date.strftime('%B').lower()
+    except FileNotFoundError:
+        # If file doesn't exist, return default start date
+        return 2024, 'october'
+
+def get_remaining_months(current_month: str, all_months: list) -> list:
+    """
+    Returns list of months to scrape starting from current month.
+    
+    Parameters:
+        current_month (str): Month to start from
+        all_months (list): Full list of NBA season months
+    
+    Returns:
+        list: Remaining months to scrape
+    """
+    try:
+        current_idx = all_months.index(current_month)
+        return all_months[current_idx:]
+    except ValueError:
+        return all_months
+
 def dataset_refresh():
     """
     Recallable function that runs data retrieval for both box score
     stats and odds, allows users to retrieve new data.
-
-    Parameters:
-        None
     """
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     }
-    year = 2025
+    
+    # Get the latest game date from existing data
+    current_year, current_month = get_latest_game_date(DATA_PATHS['PROCESSED_NBA'])
     months = ['october', 'november', 'december', 'january', 'february', 'march', 'april']
-    all_player_stats = pd.DataFrame()
-    for month in months:
-        box_score_links = get_box_score_links(year, month, headers)
+    months_to_scrape = get_remaining_months(current_month, months)
+    
+    # Load existing data if available
+    try:
+        all_player_stats = pd.read_csv(DATA_PATHS['RAW_NBA'])
+    except FileNotFoundError:
+        all_player_stats = pd.DataFrame()
+    
+    # Scrape new box score data
+    for month in months_to_scrape:
+        box_score_links = get_box_score_links(current_year, month, headers)
         for box_score_url in box_score_links:
+            game_id = box_score_url.split('/')[-1].replace('.html', '')
+            # Skip if game already exists in dataset
+            if not all_player_stats.empty and game_id in all_player_stats['GameID'].values:
+                continue
             game_stats = get_player_stats(box_score_url, headers)
             all_player_stats = pd.concat([all_player_stats, game_stats], ignore_index=True)
-    all_player_stats.to_csv("./../data/2024-25_NBA.csv", index=False)
+    
+    # Save updated raw data
+    all_player_stats.to_csv(DATA_PATHS['RAW_NBA'], index=False)
+    
+    # Get and save player props data
     api_key = "5f1276c7-b5c5-40f9-9412-ed61622eb599"
     sportsbook = "PrizePicks"
     league = "NBA"
-    data = get_player_props(api_key, sportsbook, league)
-    if data:
-        records = process_player_props(data)
+    
+    # Fetch player props
+    props_data = get_player_props(api_key, sportsbook, league)
+    if props_data:
+        records = process_player_props(props_data)
         if records:
-            df = pd.DataFrame(records)
-            df.to_csv('./../data/NBA_Player_Props.csv', index=False)
+            props_df = pd.DataFrame(records)
+            props_df.to_csv(DATA_PATHS['PLAYER_PROPS'], index=False)
         else:
-            print("No records to save.")
+            print("No player props records to save.")
+    else:
+        print("Failed to retrieve player props data.")
 
 
 def column_fixing(df : pd.DataFrame):
@@ -313,11 +377,11 @@ def data_clean():
     Parameters:
         None
     """
-    NBA_df = pd.read_csv("./../data/2024-25_NBA.csv")
+    NBA_df = pd.read_csv(DATA_PATHS['RAW_NBA'])
     NBA_df = column_fixing(NBA_df)
     NBA_df = type_change(NBA_df)
     odds_labels = ['rebs+asts', 'pts+asts', 'pts+rebs', 'pts+rebs+asts', 'assists', 'rebounds', 'points']
     NBA_df = add_odds_columns(NBA_df, odds_labels)
     weights = [0.5, 0.25, 0.15, 0.07, 0.03]
     NBA_df = generate_labels_and_predictions(NBA_df, weights)
-    NBA_df.to_csv('./../data/24-25_NBA_processed.csv', index=False)
+    NBA_df.to_csv(DATA_PATHS['PROCESSED_NBA'], index=False)

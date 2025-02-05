@@ -11,21 +11,38 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v3
         with:
           python-version: '3.x'
+          
+      - name: Cache data files
+        uses: actions/cache@v2
+        with:
+          path: |
+            data/processed
+            data/raw
+          key: ${{ runner.os }}-nba-data
+          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          
       - name: Update stats
-        run: python utils/data_refresh.py
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+          SPORTSBOOK: ${{ secrets.SPORTSBOOK }}
+          LEAGUE: ${{ secrets.LEAGUE }}
+        run: python src/refreshing.py
+        
       - name: Commit changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data/raw/2024-25_NBA.csv
-          git add data/processed/24-25_NBA_processed.csv
-          git add data/processed/NBA_Player_Props.csv
-          git commit -m "Daily NBA stats update [skip ci]" || exit 0
+          git add data/2024-25_NBA.csv
+          git add data/24-25_NBA_processed.csv
+          git add data/NBA_Player_Props.csv
+          git diff-index --quiet HEAD || git commit -m "Daily NBA stats update [skip ci]"
           git push
