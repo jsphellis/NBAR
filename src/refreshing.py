@@ -218,54 +218,54 @@ def dataset_refresh():
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     }
     
-    # # Debug path information
-    # print("\nChecking file paths:")
-    # for key, path in DATA_PATHS.items():
-    #     print(f"{key}: {path}")
-    #     print(f"File exists: {os.path.exists(path)}")
-    #     print(f"Absolute path: {os.path.abspath(path)}")
-    #     print(f"Current working directory: {os.getcwd()}\n")
+    # Debug path information
+    print("\nChecking file paths:")
+    for key, path in DATA_PATHS.items():
+        print(f"{key}: {path}")
+        print(f"File exists: {os.path.exists(path)}")
+        print(f"Absolute path: {os.path.abspath(path)}")
+        print(f"Current working directory: {os.getcwd()}\n")
     
-    # # Get the latest game date from existing data
-    # print("Getting latest game date...")
-    # print(DATA_PATHS['PROCESSED_NBA'])
-    # current_year, current_month = get_latest_game_date(DATA_PATHS['PROCESSED_NBA'])
-    # print(f"Latest data is from {current_month} {current_year}")
+    # Get the latest game date from existing data
+    print("Getting latest game date...")
+    print(DATA_PATHS['PROCESSED_NBA'])
+    current_year, current_month = get_latest_game_date(DATA_PATHS['PROCESSED_NBA'])
+    print(f"Latest data is from {current_month} {current_year}")
     
-    # months = ['october', 'november', 'december', 'january', 'february', 'march', 'april']
-    # months_to_scrape = get_remaining_months(current_month, months)
-    # print(f"Will scrape the following months: {months_to_scrape}")
+    months = ['october', 'november', 'december', 'january', 'february', 'march', 'april']
+    months_to_scrape = get_remaining_months(current_month, months)
+    print(f"Will scrape the following months: {months_to_scrape}")
     
-    # # Load existing data if available
-    # try:
-    #     all_player_stats = pd.read_csv(DATA_PATHS['RAW_NBA'])
-    #     print(f"Loaded existing data with {len(all_player_stats)} rows")
-    # except FileNotFoundError:
-    #     print("No existing data found. Starting fresh.")
-    #     all_player_stats = pd.DataFrame()
+    # Load existing data if available
+    try:
+        all_player_stats = pd.read_csv(DATA_PATHS['RAW_NBA'])
+        print(f"Loaded existing data with {len(all_player_stats)} rows")
+    except FileNotFoundError:
+        print("No existing data found. Starting fresh.")
+        all_player_stats = pd.DataFrame()
     
-    # # Scrape new box score data
-    # for month in months_to_scrape:
-    #     print(f"\nProcessing {month.capitalize()} {current_year}...")
-    #     box_score_links = get_box_score_links(current_year, month, headers)
-    #     print(f"Found {len(box_score_links)} games to process")
+    # Scrape new box score data
+    for month in months_to_scrape:
+        print(f"\nProcessing {month.capitalize()} {current_year}...")
+        box_score_links = get_box_score_links(current_year, month, headers)
+        print(f"Found {len(box_score_links)} games to process")
         
-    #     for i, box_score_url in enumerate(box_score_links, 1):
-    #         game_id = box_score_url.split('/')[-1].replace('.html', '')
-    #         print(f"Processing game {i}/{len(box_score_links)} (ID: {game_id})", end='')
+        for i, box_score_url in enumerate(box_score_links, 1):
+            game_id = box_score_url.split('/')[-1].replace('.html', '')
+            print(f"Processing game {i}/{len(box_score_links)} (ID: {game_id})", end='')
             
-    #         # Skip if game already exists in dataset
-    #         if not all_player_stats.empty and game_id in all_player_stats['GameID'].values:
-    #             print(" - Already processed, skipping")
-    #             continue
+            # Skip if game already exists in dataset
+            if not all_player_stats.empty and game_id in all_player_stats['GameID'].values:
+                print(" - Already processed, skipping")
+                continue
                 
-    #         game_stats = get_player_stats(box_score_url, headers)
-    #         all_player_stats = pd.concat([all_player_stats, game_stats], ignore_index=True)
-    #         print(" - Complete")
+            game_stats = get_player_stats(box_score_url, headers)
+            all_player_stats = pd.concat([all_player_stats, game_stats], ignore_index=True)
+            print(" - Complete")
     
-    # print(f"\nSaving {len(all_player_stats)} rows of box score data...")
-    # all_player_stats.to_csv(DATA_PATHS['RAW_NBA'], index=False)
-    # print("Box score data saved successfully")
+    print(f"\nSaving {len(all_player_stats)} rows of box score data...")
+    all_player_stats.to_csv(DATA_PATHS['RAW_NBA'], index=False)
+    print("Box score data saved successfully")
     
     # Get and save player props data
     print("\nFetching player props data...")
