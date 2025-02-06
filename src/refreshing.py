@@ -105,13 +105,22 @@ def get_player_props(api_key : str, sportsbook : str, league : str):
         "league": league,
         "is_available": 'true'
     }
+    
+    print("\nPlayer Props API Request Details:")
+    print(f"URL: {url}")
+    print(f"Headers: {headers}")
+    print(f"Params: {params}")
+    
     response = requests.get(url, headers=headers, params=params)
     print(f"Response Status Code: {response.status_code}")
+    
     if response.status_code == 200:
         data = response.json()
         if data:
+            print(f"Successfully retrieved {len(data)} player props")
             return data
         else:
+            print("API returned empty data")
             return None
     else:
         print(f"Error: {response.status_code}, Response: {response.text}")
@@ -169,6 +178,7 @@ def get_latest_game_date(processed_file_path: str) -> tuple[int, str]:
     """
     try:
         df = pd.read_csv(processed_file_path)
+        print(df.head())
         df['date'] = pd.to_datetime(df[['Year', 'Month', 'Day']])
         latest_date = df['date'].max()
         return latest_date.year, latest_date.strftime('%B').lower()
@@ -198,52 +208,81 @@ def dataset_refresh():
     Recallable function that runs data retrieval for both box score
     stats and odds, allows users to retrieve new data.
     """
+    print("\n=== Starting Dataset Refresh ===")
+    
+    # Change to project root directory
+    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    print(f"Changed working directory to: {os.getcwd()}")
+    
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     }
     
-    # Get the latest game date from existing data
-    current_year, current_month = get_latest_game_date(DATA_PATHS['PROCESSED_NBA'])
-    months = ['october', 'november', 'december', 'january', 'february', 'march', 'april']
-    months_to_scrape = get_remaining_months(current_month, months)
+    # # Debug path information
+    # print("\nChecking file paths:")
+    # for key, path in DATA_PATHS.items():
+    #     print(f"{key}: {path}")
+    #     print(f"File exists: {os.path.exists(path)}")
+    #     print(f"Absolute path: {os.path.abspath(path)}")
+    #     print(f"Current working directory: {os.getcwd()}\n")
     
-    # Load existing data if available
-    try:
-        all_player_stats = pd.read_csv(DATA_PATHS['RAW_NBA'])
-    except FileNotFoundError:
-        all_player_stats = pd.DataFrame()
+    # # Get the latest game date from existing data
+    # print("Getting latest game date...")
+    # print(DATA_PATHS['PROCESSED_NBA'])
+    # current_year, current_month = get_latest_game_date(DATA_PATHS['PROCESSED_NBA'])
+    # print(f"Latest data is from {current_month} {current_year}")
     
-    # Scrape new box score data
-    for month in months_to_scrape:
-        box_score_links = get_box_score_links(current_year, month, headers)
-        for box_score_url in box_score_links:
-            game_id = box_score_url.split('/')[-1].replace('.html', '')
-            # Skip if game already exists in dataset
-            if not all_player_stats.empty and game_id in all_player_stats['GameID'].values:
-                continue
-            game_stats = get_player_stats(box_score_url, headers)
-            all_player_stats = pd.concat([all_player_stats, game_stats], ignore_index=True)
+    # months = ['october', 'november', 'december', 'january', 'february', 'march', 'april']
+    # months_to_scrape = get_remaining_months(current_month, months)
+    # print(f"Will scrape the following months: {months_to_scrape}")
     
-    # Save updated raw data
-    all_player_stats.to_csv(DATA_PATHS['RAW_NBA'], index=False)
+    # # Load existing data if available
+    # try:
+    #     all_player_stats = pd.read_csv(DATA_PATHS['RAW_NBA'])
+    #     print(f"Loaded existing data with {len(all_player_stats)} rows")
+    # except FileNotFoundError:
+    #     print("No existing data found. Starting fresh.")
+    #     all_player_stats = pd.DataFrame()
+    
+    # # Scrape new box score data
+    # for month in months_to_scrape:
+    #     print(f"\nProcessing {month.capitalize()} {current_year}...")
+    #     box_score_links = get_box_score_links(current_year, month, headers)
+    #     print(f"Found {len(box_score_links)} games to process")
+        
+    #     for i, box_score_url in enumerate(box_score_links, 1):
+    #         game_id = box_score_url.split('/')[-1].replace('.html', '')
+    #         print(f"Processing game {i}/{len(box_score_links)} (ID: {game_id})", end='')
+            
+    #         # Skip if game already exists in dataset
+    #         if not all_player_stats.empty and game_id in all_player_stats['GameID'].values:
+    #             print(" - Already processed, skipping")
+    #             continue
+                
+    #         game_stats = get_player_stats(box_score_url, headers)
+    #         all_player_stats = pd.concat([all_player_stats, game_stats], ignore_index=True)
+    #         print(" - Complete")
+    
+    # print(f"\nSaving {len(all_player_stats)} rows of box score data...")
+    # all_player_stats.to_csv(DATA_PATHS['RAW_NBA'], index=False)
+    # print("Box score data saved successfully")
     
     # Get and save player props data
-    api_key = "5f1276c7-b5c5-40f9-9412-ed61622eb599"
-    sportsbook = "PrizePicks"
-    league = "NBA"
-    
-    # Fetch player props
+    print("\nFetching player props data...")
     props_data = get_player_props(api_key, sportsbook, league)
     if props_data:
         records = process_player_props(props_data)
         if records:
             props_df = pd.DataFrame(records)
+            print(f"Saving {len(props_df)} player props records...")
             props_df.to_csv(DATA_PATHS['PLAYER_PROPS'], index=False)
+            print("Player props data saved successfully")
         else:
             print("No player props records to save.")
     else:
         print("Failed to retrieve player props data.")
-
+    
+    print("\n=== Dataset Refresh Complete ===")
 
 def column_fixing(df : pd.DataFrame):
     """
@@ -368,20 +407,44 @@ def generate_labels_and_predictions(nba_df : pd.DataFrame, weights : list):
     nba_df['Exceeds_Prediction'] = labels
     return nba_df
 
-
 def data_clean():
     """
     Function that includes all cleaning functions grouped together
     so users can clean data after refreshing.
-
-    Parameters:
-        None
     """
+    print("\n=== Starting Data Cleaning ===")
+    
+    print("Loading raw NBA data...")
     NBA_df = pd.read_csv(DATA_PATHS['RAW_NBA'])
+    print(f"Loaded {len(NBA_df)} rows of data")
+    
+    print("Fixing column names and filtering players...")
     NBA_df = column_fixing(NBA_df)
+    print(f"After filtering: {len(NBA_df)} rows")
+    
+    print("Converting data types...")
     NBA_df = type_change(NBA_df)
+    
+    print("Adding odds columns...")
     odds_labels = ['rebs+asts', 'pts+asts', 'pts+rebs', 'pts+rebs+asts', 'assists', 'rebounds', 'points']
     NBA_df = add_odds_columns(NBA_df, odds_labels)
+    
+    print("Generating predictions and labels...")
     weights = [0.5, 0.25, 0.15, 0.07, 0.03]
     NBA_df = generate_labels_and_predictions(NBA_df, weights)
+    
+    print("Saving processed data...")
     NBA_df.to_csv(DATA_PATHS['PROCESSED_NBA'], index=False)
+    print("Data cleaning complete!")
+    print(f"Final dataset shape: {NBA_df.shape}")
+    print("\n=== Data Cleaning Complete ===")
+
+if __name__ == "__main__":
+    print("\nStarting NBA data pipeline...")
+    try:
+        dataset_refresh()
+        data_clean()
+        print("\nNBA data pipeline completed successfully!")
+    except Exception as e:
+        print(f"\nError in NBA data pipeline: {str(e)}")
+        raise e
