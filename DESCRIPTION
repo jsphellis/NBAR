@@ -7,16 +7,8 @@ Description: Analyzes NBA player performance data against betting odds to identi
     patterns and potential opportunities in the sports betting market. Combines 
     historical player statistics with corresponding betting lines to provide 
     data-driven insights.
+Description: Analyzes NBA player performance data against betting odds.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
+Depends: R (>= 3.5.0)
 RoxygenNote: 7.2.3
-Imports:
-    dplyr,
-    ggplot2,
-    readr,
-    tibble,
-    httr
-Suggests:
-    testthat (>= 3.0.0)
-LazyData: true
