@@ -6,3 +6,4 @@
 ^data/.*\.csv$
 ^LICENSE\.md$
 ^requirements\.txt$
+^src$
