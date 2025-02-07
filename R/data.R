@@ -59,23 +59,13 @@
 #'   \item{Exceeds_Prediction}{Whether actual points exceeded prediction}
 #' }
 #'
-#' @source Data collected from official NBA box scores and various sportsbooks
 #' @examples
 #' \dontrun{
-#' library(BeatTheOdds)
-#' library(ggplot2)
-#' 
-#' # Plot points vs predicted points
-#' nba_data |>
-#'   ggplot(aes(Predicted_PTS, PTS)) +
-#'   geom_point(alpha = 0.1) +
-#'   geom_abline(color = "red", linetype = "dashed") +
-#'   labs(title = "Actual vs Predicted Points")
-#' 
-#' # Calculate average prediction accuracy
-#' mean(nba_data$Exceeds_Prediction, na.rm = TRUE)
+#' library(NBAR)
+#' data("nba_data")
+#' head(nba_data)
 #' }
-"nba_data"
+#' @source Data collected from official NBA box scores and various sportsbooks
 
 #' Load NBA Player Performance Dataset
 #'
@@ -86,6 +76,6 @@
 #' nba_data <- load_nba_data()
 load_nba_data <- function() {
   # The data() function will look for nba_data.rda in the package
-  data("nba_data", package = "BeatTheOdds", envir = environment())
+  data("nba_data", package = "NBAR", envir = environment())
   nba_data
 }

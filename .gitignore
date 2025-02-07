@@ -5,6 +5,7 @@ BTO/
 .Rhistory
 .RData
 .Ruserdata
+testing.R
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

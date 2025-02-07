@@ -1,4 +1,4 @@
 library(testthat)
-library(BeatTheOdds)
+library(NBAR)
 
-test_check("BeatTheOdds")
+test_check("NBAR")

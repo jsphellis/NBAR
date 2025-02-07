@@ -6,7 +6,7 @@
 #' @keywords internal
 .get_config <- function() {
   list(
-    base_url = "https://raw.githubusercontent.com/jsphellis/Beat-The-Odds/main/inst/data",
+    base_url = "https://raw.githubusercontent.com/jsphellis/NBAR/main/inst/data",
     files = list(
       nba_data = "nba_data.rda"
     )
