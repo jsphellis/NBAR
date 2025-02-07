@@ -1,6 +1,10 @@
 # Files
 .env
 BTO/
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

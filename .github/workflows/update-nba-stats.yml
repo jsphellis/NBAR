@@ -1,8 +1,8 @@
 name: Update NBA Stats
 on:
   schedule:
-    - cron: '0 8 * * *'  # Runs daily at 8am UTC
-  workflow_dispatch:      # Allows manual triggers
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -12,18 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
+      # Your existing Python steps
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
           python-version: '3.x'
-          
-      - name: Cache data files
-        uses: actions/cache@v2
-        with:
-          path: |
-            data/processed
-            data/raw
-          key: ${{ runner.os }}-nba-data
           
       - name: Install dependencies
         run: |
@@ -37,12 +30,19 @@ jobs:
           LEAGUE: ${{ secrets.LEAGUE }}
         run: python src/refreshing.py
         
+      # Add R steps to create .rda file
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        
+      - name: Create .rda file
+        run: Rscript src/create_rda.R
+        
       - name: Commit changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add data/2024-25_NBA.csv
           git add data/24-25_NBA_processed.csv
-          git add data/NBA_Player_Props.csv
+          git add inst/data/nba_data.rda
           git diff-index --quiet HEAD || git commit -m "Daily NBA stats update [skip ci]"
           git push

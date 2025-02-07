@@ -1,0 +1,30 @@
+Package: BeatTheOdds
+Title: NBA Player Performance vs Betting Odds Analysis
+Version: 0.1.0
+Authors@R: 
+    person("Your", "Name", , "your.email@example.com", role = c("aut", "cre"))
+Description: Analyzes NBA player performance data against betting odds to identify 
+    patterns and potential opportunities in the sports betting market. Combines 
+    historical player statistics with corresponding betting lines to provide 
+    data-driven insights.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+    reticulate,
+    dplyr,
+    ggplot2,
+    readr,
+    tibble,
+    httr
+Suggests:
+    testthat (>= 3.0.0)
+LazyData: true
+Config/reticulate:
+    list(
+        packages = list(
+            list(package = "pandas"),
+            list(package = "numpy")
+        )
+    )
