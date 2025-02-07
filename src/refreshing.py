@@ -267,20 +267,20 @@ def dataset_refresh():
     all_player_stats.to_csv(DATA_PATHS['RAW_NBA'], index=False)
     print("Box score data saved successfully")
     
-    # Get and save player props data
-    print("\nFetching player props data...")
-    props_data = get_player_props(api_key, sportsbook, league)
-    if props_data:
-        records = process_player_props(props_data)
-        if records:
-            props_df = pd.DataFrame(records)
-            print(f"Saving {len(props_df)} player props records...")
-            props_df.to_csv(DATA_PATHS['PLAYER_PROPS'], index=False)
-            print("Player props data saved successfully")
-        else:
-            print("No player props records to save.")
-    else:
-        print("Failed to retrieve player props data.")
+    # # Get and save player props data
+    # print("\nFetching player props data...")
+    # props_data = get_player_props(api_key, sportsbook, league)
+    # if props_data:
+    #     records = process_player_props(props_data)
+    #     if records:
+    #         props_df = pd.DataFrame(records)
+    #         print(f"Saving {len(props_df)} player props records...")
+    #         props_df.to_csv(DATA_PATHS['PLAYER_PROPS'], index=False)
+    #         print("Player props data saved successfully")
+    #     else:
+    #         print("No player props records to save.")
+    # else:
+    #     print("Failed to retrieve player props data.")
     
     print("\n=== Dataset Refresh Complete ===")
 
